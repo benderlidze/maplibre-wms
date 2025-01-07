@@ -33,12 +33,16 @@
 <body>
     <div id="map"></div>
     <select id="layerSelect">
-        <option value="s2cloudless-2023_3857">2023</option>
-        <option value="s2cloudless-2022_3857">2022</option>
-        <option value="s2cloudless-2021_3857">2021</option>
-        <option value="s2cloudless-2020_3857">2020</option>
+        <option selected value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2019">2019</option>
     </select>
+
     <script>
+        const deafaultYear = '2023';
+        const yearSelect = document.getElementById('layerSelect')
         const map = new maplibregl.Map({
             container: 'map',
             style: {
@@ -47,7 +51,7 @@
                     's2maps': {
                         'type': 'raster',
                         'tiles': [
-                            'https://tiles.maps.eox.at/wms?service=WMS&request=GetMap&layers=s2cloudless-2023_3857&styles=&format=image/jpeg&transparent=false&version=1.1.1&width=256&height=256&srs=EPSG:3857&bbox={bbox-epsg-3857}'
+                            `https://tiles.maps.eox.at/wms?service=WMS&request=GetMap&layers=s2cloudless-${deafaultYear}_3857&styles=&format=image/jpeg&transparent=false&version=1.1.1&width=256&height=256&srs=EPSG:3857&bbox={bbox-epsg-3857}`
                         ],
                         'tileSize': 256
                     }
@@ -79,7 +83,8 @@
                     'WIDTH=256&' +
                     'HEIGHT=256&' +
                     'SRS=EPSG:3857&' +
-                    'BBOX={bbox-epsg-3857}'
+                    'BBOX={bbox-epsg-3857}&' +
+                    'CQL_FILTER=year=' + deafaultYear
 
                 ],
                 tileSize: 256
@@ -96,16 +101,28 @@
             });
         });
 
+
         // Layer switcher functionality
-        document.getElementById('layerSelect').addEventListener('change', (e) => {
-            const newLayer = e.target.value;
+        yearSelect.addEventListener('change', (e) => {
+            const year = e.target.value;
             const source = map.getSource('s2maps');
             if (source) {
                 source.setTiles([
-                    `https://tiles.maps.eox.at/wms?service=WMS&request=GetMap&layers=${newLayer}&styles=&format=image/jpeg&transparent=false&version=1.1.1&width=256&height=256&srs=EPSG:3857&bbox={bbox-epsg-3857}`
+                    `https://tiles.maps.eox.at/wms?service=WMS&request=GetMap&layers=s2cloudless-${year}_3857&styles=&format=image/jpeg&transparent=false&version=1.1.1&width=256&height=256&srs=EPSG:3857&bbox={bbox-epsg-3857}`
                 ]);
             }
+
+
+            const fineprint = map.getSource('wms-source');
+            if (fineprint) {
+                fineprint.setTiles([
+                    `https://vps.fineprint.global/gs/geoserver/oenb/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=oenb:mine-predictions-v0&WIDTH=256&HEIGHT=256&SRS=EPSG:3857&BBOX={bbox-epsg-3857}&CQL_FILTER=year=${year}`
+                ]);
+            }
+
         });
+
+
     </script>
 </body>
 
